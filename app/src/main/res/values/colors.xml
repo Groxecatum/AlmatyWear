@@ -2,4 +2,7 @@
 <resources>
     <color name="background">#000000</color>
     <color name="digital_text">#ffffff</color>
+    <color name="onay_text">#f9e425</color>
+    <color name="kopilka_text">#b611fc</color>
 </resources>
+

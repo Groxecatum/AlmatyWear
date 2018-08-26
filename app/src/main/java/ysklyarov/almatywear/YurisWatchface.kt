@@ -9,23 +9,32 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.Typeface
+import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
+import android.provider.Settings
+import android.support.v4.app.ActivityCompat.startActivityForResult
 import android.support.v4.content.ContextCompat
 import android.support.wearable.complications.ComplicationData
+import android.support.wearable.complications.ComplicationHelperActivity
 import android.support.wearable.watchface.CanvasWatchFaceService
 import android.support.wearable.watchface.WatchFaceService
 import android.support.wearable.watchface.WatchFaceStyle
-import android.util.DisplayMetrics
+import android.util.Log
 import android.view.SurfaceHolder
 import android.view.WindowInsets
-import android.view.WindowManager
 import android.widget.Toast
+import org.jetbrains.anko.doAsync
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 import java.lang.ref.WeakReference
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.Calendar
 import java.util.TimeZone
+import kotlin.math.log
 
 /**
  * Digital watch face with seconds. In ambient mode, the seconds aren't displayed. On devices with
@@ -41,14 +50,14 @@ import java.util.TimeZone
  */
 class YurisWatchface : CanvasWatchFaceService() {
 
-    private val LEFT_COMPLICATION_ID = 0
-    private val RIGHT_COMPLICATION_ID = 1
+//    private val LEFT_COMPLICATION_ID = 0
+//    private val RIGHT_COMPLICATION_ID = 1
 
-    val displayMetrics = DisplayMetrics()
+//    val displayMetrics = DisplayMetrics()
 
     //val windowManager = WindowManager.defaultDisplay()
 
-    private val COMPLICATION_IDS = intArrayOf(LEFT_COMPLICATION_ID, RIGHT_COMPLICATION_ID)
+//    private val COMPLICATION_IDS = intArrayOf(LEFT_COMPLICATION_ID, RIGHT_COMPLICATION_ID)
 
 //    private IntArray COMPLICATION_SUPPORTED_TYPES = {
 //       {
@@ -66,7 +75,7 @@ class YurisWatchface : CanvasWatchFaceService() {
 //    }
 
     companion object {
-        private val NORMAL_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        private val NORMAL_TYPEFACE = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL)
 
         /**
          * Updates rate in milliseconds for interactive mode. We update once a second since seconds
@@ -105,9 +114,15 @@ class YurisWatchface : CanvasWatchFaceService() {
 
         private var mXOffset: Float = 0F
         private var mYOffset: Float = 0F
+        private var mYOffsetLower: Float = 0F
+        private var mYOffsetUpper: Float = 0F
+        private var mXOffsetKopilka: Float = 0F
+        private var mXOffsetOnay: Float = 0F
 
         private lateinit var mBackgroundPaint: Paint
         private lateinit var mTextPaint: Paint
+        private lateinit var mTextOnay: Paint
+        private lateinit var mTextKopilka: Paint
 
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
@@ -116,6 +131,8 @@ class YurisWatchface : CanvasWatchFaceService() {
         private var mLowBitAmbient: Boolean = false
         private var mBurnInProtection: Boolean = false
         private var mAmbient: Boolean = false
+        private var isRound: Boolean = true
+        private var needToRelocateNumbers: Boolean = false
 
         private val mUpdateTimeHandler: Handler = EngineHandler(this)
 
@@ -126,37 +143,29 @@ class YurisWatchface : CanvasWatchFaceService() {
             }
         }
 
-        fun initializeComplications() {
-//            Log.d(TAG, "initializeComplications()");
+        private fun sendGet(): String {
+            val url = "http://www.google.com/"
+            val obj = URL(url)
 
-//            mActiveComplicationDataSparseArray = new SparseArray<>(COMPLICATION_IDS.length);
-//
-//            ComplicationDrawable leftComplicationDrawable =
-//                   (ComplicationDrawable) getDrawable(R.drawable.custom_complication_styles);
-//            leftComplicationDrawable.setContext(getApplicationContext());
-//
-//            ComplicationDrawable rightComplicationDrawable =
-//                   (ComplicationDrawable) getDrawable(R.drawable.custom_complication_styles);
-//            rightComplicationDrawable.setContext(getApplicationContext());
-//
-//            mComplicationDrawableSparseArray = new SparseArray<>(COMPLICATION_IDS.length);
-//            mComplicationDrawableSparseArray.put(LEFT_COMPLICATION_ID, leftComplicationDrawable);
-//            mComplicationDrawableSparseArray.put(RIGHT_COMPLICATION_ID, rightComplicationDrawable);
-//
-//            setActiveComplications(COMPLICATION_IDS);
-        }
+            with(obj.openConnection() as HttpURLConnection) {
+                // optional default is GET
+                requestMethod = "GET"
 
-        override fun onComplicationDataUpdate(complicationId: Int, complicationData: ComplicationData) {
-//           Log.d(TAG, "onComplicationDataUpdate() id: " + complicationId);
-//
-//           // Adds/updates active complication data in the array.
-//           mActiveComplicationDataSparseArray.put(complicationId, complicationData);
-//
-//           // Updates correct ComplicationDrawable with updated data.
-//           ComplicationDrawable complicationDrawable = mComplicationDrawableSparseArray.get(complicationId);
-//           complicationDrawable.setComplicationData(complicationData);
 
-           invalidate();
+                println("\nSending 'GET' request to URL : $url")
+                println("Response Code : $responseCode")
+
+                BufferedReader(InputStreamReader(inputStream)).use {
+                    val response = StringBuffer()
+
+                    var inputLine = it.readLine()
+                    while (inputLine != null) {
+                        response.append(inputLine)
+                        inputLine = it.readLine()
+                    }
+                    return response.toString()
+                }
+            }
         }
 
         override fun onCreate(holder: SurfaceHolder) {
@@ -166,26 +175,35 @@ class YurisWatchface : CanvasWatchFaceService() {
                     .setAcceptsTapEvents(true)
                     .build())
 
-            //windowManager.defaultDisplay.getMetrics(displayMetrics)
-
             mCalendar = Calendar.getInstance()
 
             val resources = this@YurisWatchface.resources
-            mYOffset = (displayMetrics.heightPixels / 3).toFloat()
+            mYOffset = resources.getDimension((R.dimen.digital_y_offset))
+            mYOffsetLower = resources.getDimension((R.dimen.digital_y_offset_lower))
+            mYOffsetUpper = resources.getDimension((R.dimen.digital_y_offset_upper))
 
             // Initializes background.
             mBackgroundPaint = Paint().apply {
                 color = ContextCompat.getColor(applicationContext, R.color.background)
             }
 
-            // Initializes Watch Face.
             mTextPaint = Paint().apply {
                 typeface = NORMAL_TYPEFACE
                 isAntiAlias = true
                 color = ContextCompat.getColor(applicationContext, R.color.digital_text)
             }
 
-            initializeComplications()
+            mTextOnay = Paint().apply {
+                typeface = NORMAL_TYPEFACE
+                isAntiAlias = true
+                color = ContextCompat.getColor(applicationContext, R.color.onay_text)
+            }
+
+            mTextKopilka = Paint().apply {
+                typeface = NORMAL_TYPEFACE
+                isAntiAlias = true
+                color = ContextCompat.getColor(applicationContext, R.color.kopilka_text)
+            }
         }
 
         override fun onDestroy() {
@@ -209,9 +227,12 @@ class YurisWatchface : CanvasWatchFaceService() {
         override fun onAmbientModeChanged(inAmbientMode: Boolean) {
             super.onAmbientModeChanged(inAmbientMode)
             mAmbient = inAmbientMode
+            needToRelocateNumbers = true
 
             if (mLowBitAmbient) {
                 mTextPaint.isAntiAlias = !inAmbientMode
+                mTextKopilka.isAntiAlias = !inAmbientMode
+                mTextOnay.isAntiAlias = !inAmbientMode
             }
 
             // Whether the timer should be running depends on whether we're visible (as well as
@@ -226,40 +247,43 @@ class YurisWatchface : CanvasWatchFaceService() {
         override fun onTapCommand(tapType: Int, x: Int, y: Int, eventTime: Long) {
             when (tapType) {
                 WatchFaceService.TAP_TYPE_TOUCH -> {
-                    // The user has started touching the screen.
+//                    doAsync {
+//                        val resp = sendGet()
+//                        Log.d("SEND", resp)
+//                    }
                 }
                 WatchFaceService.TAP_TYPE_TOUCH_CANCEL -> {
                     // The user has started a different gesture or otherwise cancelled the tap.
                 }
-                WatchFaceService.TAP_TYPE_TAP ->
-                    // The user has completed the tap gesture.
-                    // TODO: Add code to handle the tap gesture.
-                    Toast.makeText(applicationContext, R.string.message, Toast.LENGTH_SHORT)
-                            .show()
+                WatchFaceService.TAP_TYPE_TAP -> {
+
+                }
             }
             invalidate()
         }
 
         override fun onDraw(canvas: Canvas, bounds: Rect) {
-            // Draw the background.
-            if (mAmbient) {
-                canvas.drawColor(Color.BLACK)
-            } else {
-                canvas.drawRect(
-                        0f, 0f, bounds.width().toFloat(), bounds.height().toFloat(), mBackgroundPaint)
-            }
+            canvas.drawColor(Color.BLACK)
 
             // Draw H:MM in ambient mode or H:MM:SS in interactive mode.
             val now = System.currentTimeMillis()
             mCalendar.timeInMillis = now
+            if (needToRelocateNumbers) {
+                determineXOffset()
+                needToRelocateNumbers = false
+            }
+
+//            val resp = sendGet()
+//            Log.d("SEND", "resp")
 
             val text = if (mAmbient)
-                String.format("%d:%02d", mCalendar.get(Calendar.HOUR),
-                        mCalendar.get(Calendar.MINUTE))
+                String.format("%d:%02d", mCalendar.get(Calendar.HOUR_OF_DAY), mCalendar.get(Calendar.MINUTE))
             else
-                String.format("%d:%02d:%02d", mCalendar.get(Calendar.HOUR),
-                        mCalendar.get(Calendar.MINUTE), mCalendar.get(Calendar.SECOND))
+                String.format("%d:%02d:%02d", mCalendar.get(Calendar.HOUR_OF_DAY), mCalendar.get(Calendar.MINUTE),
+                        mCalendar.get(Calendar.SECOND))
             canvas.drawText(text, mXOffset, mYOffset, mTextPaint)
+//            canvas.drawText("5000", mXOffsetOnay, mYOffsetLower, mTextOnay)
+//            canvas.drawText("200000", mXOffsetKopilka, mYOffsetUpper, mTextKopilka)
         }
 
         override fun onVisibilityChanged(visible: Boolean) {
@@ -297,15 +321,45 @@ class YurisWatchface : CanvasWatchFaceService() {
             this@YurisWatchface.unregisterReceiver(mTimeZoneReceiver)
         }
 
+        fun determineXOffset() {
+            if (mAmbient) {
+                mXOffset = resources.getDimension(
+                        if (isRound)
+                            R.dimen.digital_x_offset_round_amb
+                        else
+                            R.dimen.digital_x_offset_amb
+                )
+            } else {
+                mXOffset = resources.getDimension(
+                        if (isRound)
+                            R.dimen.digital_x_offset_round
+                        else
+                            R.dimen.digital_x_offset
+                )
+            }
+
+        }
+
         override fun onApplyWindowInsets(insets: WindowInsets) {
             super.onApplyWindowInsets(insets)
 
             // Load resources that have alternate values for round watches.
             val resources = this@YurisWatchface.resources
-            val isRound = insets.isRound
+            isRound = insets.isRound
 
+            determineXOffset()
 
-            mXOffset = (displayMetrics.widthPixels / 3).toFloat()
+            mXOffsetKopilka = resources.getDimension(
+                    if (isRound)
+                        R.dimen.digital_x_offset_kopilka_round
+                    else
+                        R.dimen.digital_x_offset_kopilka)
+
+            mXOffsetOnay = resources.getDimension(
+                    if (isRound)
+                        R.dimen.digital_x_offset_onay_round
+                    else
+                        R.dimen.digital_x_offset_onay)
 
             val textSize = resources.getDimension(
                     if (isRound)
@@ -314,7 +368,16 @@ class YurisWatchface : CanvasWatchFaceService() {
                         R.dimen.digital_text_size
             )
 
+            val subTextSize = resources.getDimension(
+                    if (isRound)
+                        R.dimen.digital_subtext_size_round
+                    else
+                        R.dimen.digital_subtext_size
+            )
+
             mTextPaint.textSize = textSize
+            mTextOnay.textSize = subTextSize
+            mTextKopilka.textSize = subTextSize
         }
 
         /**
