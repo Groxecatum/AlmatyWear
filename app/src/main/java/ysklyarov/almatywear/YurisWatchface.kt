@@ -4,37 +4,26 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Rect
-import android.graphics.Typeface
-import android.os.AsyncTask
+import android.graphics.*
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
-import android.provider.Settings
-import android.support.v4.app.ActivityCompat.startActivityForResult
 import android.support.v4.content.ContextCompat
-import android.support.wearable.complications.ComplicationData
-import android.support.wearable.complications.ComplicationHelperActivity
+import android.support.wearable.complications.rendering.TextRenderer
 import android.support.wearable.watchface.CanvasWatchFaceService
 import android.support.wearable.watchface.WatchFaceService
 import android.support.wearable.watchface.WatchFaceStyle
-import android.util.Log
+import android.text.Layout
+import android.text.TextPaint
+import android.view.Gravity
 import android.view.SurfaceHolder
 import android.view.WindowInsets
-import android.widget.Toast
-import org.jetbrains.anko.doAsync
 import java.io.BufferedReader
 import java.io.InputStreamReader
-
 import java.lang.ref.WeakReference
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.Calendar
-import java.util.TimeZone
-import kotlin.math.log
+import java.util.*
 
 /**
  * Digital watch face with seconds. In ambient mode, the seconds aren't displayed. On devices with
@@ -119,6 +108,9 @@ class YurisWatchface : CanvasWatchFaceService() {
         private var mXOffsetKopilka: Float = 0F
         private var mXOffsetOnay: Float = 0F
 
+        private lateinit var mOnayRenderer: TextRenderer
+        private lateinit var mKopilkaRenderer: TextRenderer
+
         private lateinit var mBackgroundPaint: Paint
         private lateinit var mTextPaint: Paint
         private lateinit var mTextOnay: Paint
@@ -193,11 +185,22 @@ class YurisWatchface : CanvasWatchFaceService() {
                 color = ContextCompat.getColor(applicationContext, R.color.digital_text)
             }
 
-            mTextOnay = Paint().apply {
+            mTextOnay = TextPaint().apply {
                 typeface = NORMAL_TYPEFACE
                 isAntiAlias = true
                 color = ContextCompat.getColor(applicationContext, R.color.onay_text)
             }
+
+            mOnayRenderer = TextRenderer()
+            mOnayRenderer.setAlignment(Layout.Alignment.ALIGN_CENTER)
+            mOnayRenderer.setGravity(Gravity.CENTER)
+            mOnayRenderer.setPaint(TextPaint().apply {
+                typeface = NORMAL_TYPEFACE
+                isAntiAlias = true
+                color = ContextCompat.getColor(applicationContext, R.color.onay_text)
+                textSize = R.dimen.digital_subtext_size.toFloat()
+            })
+            mOnayRenderer.setText("5000")
 
             mTextKopilka = Paint().apply {
                 typeface = NORMAL_TYPEFACE
@@ -228,6 +231,8 @@ class YurisWatchface : CanvasWatchFaceService() {
             super.onAmbientModeChanged(inAmbientMode)
             mAmbient = inAmbientMode
             needToRelocateNumbers = true
+
+            mOnayRenderer.setInAmbientMode(inAmbientMode)
 
             if (mLowBitAmbient) {
                 mTextPaint.isAntiAlias = !inAmbientMode
@@ -282,6 +287,8 @@ class YurisWatchface : CanvasWatchFaceService() {
                 String.format("%d:%02d:%02d", mCalendar.get(Calendar.HOUR_OF_DAY), mCalendar.get(Calendar.MINUTE),
                         mCalendar.get(Calendar.SECOND))
             canvas.drawText(text, mXOffset, mYOffset, mTextPaint)
+            mOnayRenderer.draw(canvas, Rect(0, mYOffsetLower.toInt(), canvas.width,
+                    (mYOffsetLower + 20).toInt()))
 //            canvas.drawText("5000", mXOffsetOnay, mYOffsetLower, mTextOnay)
 //            canvas.drawText("200000", mXOffsetKopilka, mYOffsetUpper, mTextKopilka)
         }
@@ -321,7 +328,7 @@ class YurisWatchface : CanvasWatchFaceService() {
             this@YurisWatchface.unregisterReceiver(mTimeZoneReceiver)
         }
 
-        fun determineXOffset() {
+        private fun determineXOffset() {
             if (mAmbient) {
                 mXOffset = resources.getDimension(
                         if (isRound)
