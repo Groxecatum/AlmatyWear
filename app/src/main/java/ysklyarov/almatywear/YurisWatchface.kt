@@ -287,10 +287,8 @@ class YurisWatchface : CanvasWatchFaceService() {
                 String.format("%d:%02d:%02d", mCalendar.get(Calendar.HOUR_OF_DAY), mCalendar.get(Calendar.MINUTE),
                         mCalendar.get(Calendar.SECOND))
             canvas.drawText(text, mXOffset, mYOffset, mTextPaint)
-            mOnayRenderer.draw(canvas, Rect(0, mYOffsetLower.toInt(), canvas.width,
-                    (mYOffsetLower + 20).toInt()))
-//            canvas.drawText("5000", mXOffsetOnay, mYOffsetLower, mTextOnay)
-//            canvas.drawText("200000", mXOffsetKopilka, mYOffsetUpper, mTextKopilka)
+//            mOnayRenderer.draw(canvas, Rect(0, mYOffsetLower.toInt(), canvas.width,
+//                    (mYOffsetLower + 20).toInt()))
         }
 
         override fun onVisibilityChanged(visible: Boolean) {
