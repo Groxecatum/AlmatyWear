@@ -7,7 +7,7 @@ apply plugin: 'kotlin-android-extensions'
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "com.example.ysklyarov.myapplication"
+        applicationId "com.example.ysklyarov.watchface"
         minSdkVersion 26
         targetSdkVersion 28
         versionCode 1
@@ -27,9 +27,9 @@ dependencies {
     implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.google.android.support:wearable:2.3.0'
     implementation 'com.google.android.gms:play-services-wearable:15.0.1'
-    implementation 'com.android.support:percent:28.0.0-rc01'
-    implementation 'com.android.support:support-v4:28.0.0-rc01'
-    implementation 'com.android.support:recyclerview-v7:28.0.0-rc01'
+    implementation 'com.android.support:percent:28.0.0-rc02'
+    implementation 'com.android.support:support-v4:28.0.0-rc02'
+    implementation 'com.android.support:recyclerview-v7:28.0.0-rc02'
     implementation "org.jetbrains.anko:anko:0.10.5"
     compileOnly 'com.google.android.wearable:wearable:2.3.0'
 }
