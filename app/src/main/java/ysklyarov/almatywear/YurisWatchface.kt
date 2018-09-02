@@ -177,7 +177,7 @@ class YurisWatchface : CanvasWatchFaceService() {
         }
 
         private fun loadSavedPreferences() {
-            Log.d(TAG, "Loading preferences")
+//            Log.d(TAG, "Loading preferences")
 //            val markerColorResourceName = applicationContext.getString(R.string.saved_marker_color)
 
 //            mWatchHandHighlightColor = mSharedPref.getInt(markerColorResourceName, Color.WHITE)
@@ -196,7 +196,7 @@ class YurisWatchface : CanvasWatchFaceService() {
         }
 
         private fun setComplicationsActiveAndAmbientColors(primaryComplicationColor: Int) {
-            Log.d(TAG, "Setting color for complications")
+//            Log.d(TAG, "Setting color for complications")
             var complicationId: Int
             var complicationDrawable: ComplicationDrawable
 
@@ -272,7 +272,7 @@ class YurisWatchface : CanvasWatchFaceService() {
         }
 
         override fun onCreate(holder: SurfaceHolder) {
-            Log.d(TAG, "Creating")
+//            Log.d(TAG, "Creating")
             super.onCreate(holder)
 
             setWatchFaceStyle(WatchFaceStyle.Builder(this@YurisWatchface)
@@ -336,59 +336,59 @@ class YurisWatchface : CanvasWatchFaceService() {
             updateTimer()
         }
 
-        override fun onSurfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-            super.onSurfaceChanged(holder, format, width, height)
-
-            Log.d(TAG, "Setting bounds")
-            /*
-             * Calculates location bounds for right and left circular complications. Please note,
-             * we are not demonstrating a long text complication in this watch face.
-             *
-             * We suggest using at least 1/4 of the screen width for circular (or squared)
-             * complications and 2/3 of the screen width for wide rectangular complications for
-             * better readability.
-             */
-
-            // For most Wear devices, width and height are the same, so we just chose one (width).
-            val sizeOfComplication = width / 4
-            val midpointOfScreen = width / 2
-
-            val horizontalOffset = (midpointOfScreen - sizeOfComplication) / 2
-            val verticalOffset = midpointOfScreen - sizeOfComplication / 2
-
-            val leftBounds =
-            // Left, Top, Right, Bottom
-                    Rect(
-                            horizontalOffset,
-                            verticalOffset,
-                            horizontalOffset + sizeOfComplication,
-                            verticalOffset + sizeOfComplication)
-
-            Log.d(TAG, "Setting left bounds $horizontalOffset $verticalOffset, $sizeOfComplication")
-
-            val leftComplicationDrawable = mComplicationDrawableSparseArray.get(LEFT_COMPLICATION_ID)
-            leftComplicationDrawable.bounds = leftBounds
-
-            val rightBounds =
-            // Left, Top, Right, Bottom
-                    Rect(
-                            midpointOfScreen + horizontalOffset,
-                            verticalOffset,
-                            midpointOfScreen + horizontalOffset + sizeOfComplication + 20,
-                            verticalOffset + sizeOfComplication + 20)
-
-            Log.d(TAG, "Setting right bounds from midpoint $midpointOfScreen - $horizontalOffset $verticalOffset, $sizeOfComplication")
-
-            val rightComplicationDrawable = mComplicationDrawableSparseArray.get(RIGHT_COMPLICATION_ID)
-            rightComplicationDrawable.bounds = rightBounds
-
-            val screenForBackgroundBound =
-            // Left, Top, Right, Bottom
-                    Rect(0, 0, width, height)
-
-            val backgroundComplicationDrawable = mComplicationDrawableSparseArray.get(BACKGROUND_COMPLICATION_ID)
-            backgroundComplicationDrawable.bounds = screenForBackgroundBound
-        }
+//        override fun onSurfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+//            super.onSurfaceChanged(holder, format, width, height)
+//
+//            Log.d(TAG, "Setting bounds")
+//            /*
+//             * Calculates location bounds for right and left circular complications. Please note,
+//             * we are not demonstrating a long text complication in this watch face.
+//             *
+//             * We suggest using at least 1/4 of the screen width for circular (or squared)
+//             * complications and 2/3 of the screen width for wide rectangular complications for
+//             * better readability.
+//             */
+//
+//            // For most Wear devices, width and height are the same, so we just chose one (width).
+//            val sizeOfComplication = width / 4
+//            val midpointOfScreen = width / 2
+//
+//            val horizontalOffset = (midpointOfScreen - sizeOfComplication) / 2
+//            val verticalOffset = midpointOfScreen - sizeOfComplication / 2
+//
+//            val leftBounds =
+//            // Left, Top, Right, Bottom
+//                    Rect(
+//                            horizontalOffset,
+//                            verticalOffset,
+//                            horizontalOffset + sizeOfComplication,
+//                            verticalOffset + sizeOfComplication)
+//
+//            Log.d(TAG, "Setting left bounds $horizontalOffset $verticalOffset, $sizeOfComplication")
+//
+//            val leftComplicationDrawable = mComplicationDrawableSparseArray.get(LEFT_COMPLICATION_ID)
+//            leftComplicationDrawable.bounds = leftBounds
+//
+//            val rightBounds =
+//            // Left, Top, Right, Bottom
+//                    Rect(
+//                            midpointOfScreen + horizontalOffset,
+//                            verticalOffset,
+//                            midpointOfScreen + horizontalOffset + sizeOfComplication + 20,
+//                            verticalOffset + sizeOfComplication + 20)
+//
+//            Log.d(TAG, "Setting right bounds from midpoint $midpointOfScreen - $horizontalOffset $verticalOffset, $sizeOfComplication")
+//
+//            val rightComplicationDrawable = mComplicationDrawableSparseArray.get(RIGHT_COMPLICATION_ID)
+//            rightComplicationDrawable.bounds = rightBounds
+//
+//            val screenForBackgroundBound =
+//            // Left, Top, Right, Bottom
+//                    Rect(0, 0, width, height)
+//
+//            val backgroundComplicationDrawable = mComplicationDrawableSparseArray.get(BACKGROUND_COMPLICATION_ID)
+//            backgroundComplicationDrawable.bounds = screenForBackgroundBound
+//        }
 
         override fun onTapCommand(tapType: Int, x: Int, y: Int, eventTime: Long) {
             when (tapType) {
@@ -443,7 +443,7 @@ class YurisWatchface : CanvasWatchFaceService() {
         }
 
         fun drawComplications(canvas: Canvas) {
-            Log.d(TAG, "Drawing complications")
+//            Log.d(TAG, "Drawing complications")
             var complicationId: Int
             var complicationDrawable: ComplicationDrawable
 
@@ -458,9 +458,9 @@ class YurisWatchface : CanvasWatchFaceService() {
         }
 
         override fun onDraw(canvas: Canvas, bounds: Rect) {
-            Log.d(TAG, "Drawing")
+//            Log.d(TAG, "Drawing")
             drawBackground(canvas)
-            drawComplications(canvas)
+//            drawComplications(canvas)
             drawWatchFace(canvas)
         }
 
