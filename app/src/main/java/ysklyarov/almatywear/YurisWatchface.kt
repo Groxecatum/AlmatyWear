@@ -22,7 +22,6 @@ import android.util.SparseArray
 import android.view.Gravity
 import android.view.SurfaceHolder
 import android.view.WindowInsets
-import ysklyarov.almatywear.config.ConfigAdapter
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.lang.ref.WeakReference
@@ -67,34 +66,34 @@ class YurisWatchface : CanvasWatchFaceService() {
 
         // Used by {@link AnalogComplicationConfigRecyclerViewAdapter} to check if complication location
         // is supported in settings config activity.
-        fun getComplicationId(
-                complicationLocation: ConfigAdapter.ComplicationLocation): Int {
-            // Add any other supported locations here.
-            when (complicationLocation) {
-                //ConfigAdapter.ComplicationLocation.BACKGROUND -> return BACKGROUND_COMPLICATION_ID
-                ConfigAdapter.ComplicationLocation.LEFT -> return LEFT_COMPLICATION_ID
-                ConfigAdapter.ComplicationLocation.RIGHT -> return RIGHT_COMPLICATION_ID
-                else -> return -1
-            }
-        }
-
-        // Used by {@link AnalogComplicationConfigRecyclerViewAdapter} to retrieve all complication ids.
-        fun getComplicationIds(): IntArray {
-            return COMPLICATION_IDS
-        }
-
-        // Used by {@link AnalogComplicationConfigRecyclerViewAdapter} to see which complication types
-        // are supported in the settings config activity.
-        fun getSupportedComplicationTypes(
-                complicationLocation: ConfigAdapter.ComplicationLocation): IntArray {
-            // Add any other supported locations here.
-            when (complicationLocation) {
-                //ConfigAdapter.ComplicationLocation.BACKGROUND -> return COMPLICATION_SUPPORTED_TYPES[0]
-                ConfigAdapter.ComplicationLocation.LEFT -> return COMPLICATION_SUPPORTED_TYPES[1]
-                ConfigAdapter.ComplicationLocation.RIGHT -> return COMPLICATION_SUPPORTED_TYPES[2]
-                else -> return intArrayOf()
-            }
-        }
+//        fun getComplicationId(
+//                complicationLocation: ConfigAdapter.ComplicationLocation): Int {
+//            // Add any other supported locations here.
+//            when (complicationLocation) {
+//                //ConfigAdapter.ComplicationLocation.BACKGROUND -> return BACKGROUND_COMPLICATION_ID
+//                ConfigAdapter.ComplicationLocation.LEFT -> return LEFT_COMPLICATION_ID
+//                ConfigAdapter.ComplicationLocation.RIGHT -> return RIGHT_COMPLICATION_ID
+//                else -> return -1
+//            }
+//        }
+//
+//        // Used by {@link AnalogComplicationConfigRecyclerViewAdapter} to retrieve all complication ids.
+//        fun getComplicationIds(): IntArray {
+//            return COMPLICATION_IDS
+//        }
+//
+//        // Used by {@link AnalogComplicationConfigRecyclerViewAdapter} to see which complication types
+//        // are supported in the settings config activity.
+//        fun getSupportedComplicationTypes(
+//                complicationLocation: ConfigAdapter.ComplicationLocation): IntArray {
+//            // Add any other supported locations here.
+//            when (complicationLocation) {
+//                //ConfigAdapter.ComplicationLocation.BACKGROUND -> return COMPLICATION_SUPPORTED_TYPES[0]
+//                ConfigAdapter.ComplicationLocation.LEFT -> return COMPLICATION_SUPPORTED_TYPES[1]
+//                ConfigAdapter.ComplicationLocation.RIGHT -> return COMPLICATION_SUPPORTED_TYPES[2]
+//                else -> return intArrayOf()
+//            }
+//        }
     }
 
     override fun onCreateEngine(): Engine {
@@ -131,6 +130,7 @@ class YurisWatchface : CanvasWatchFaceService() {
         //private lateinit var mKopilkaRenderer: TextRenderer
 
         private lateinit var mTextPaint: Paint
+        private lateinit var mDimTextPaint: Paint
 //        private lateinit var mTextOnay: Paint
 //        private lateinit var mTextKopilka: Paint
 
@@ -254,6 +254,13 @@ class YurisWatchface : CanvasWatchFaceService() {
                 color = ContextCompat.getColor(applicationContext, R.color.digital_text)
             }
 
+            mDimTextPaint = Paint().apply {
+                typeface = NORMAL_TYPEFACE
+                isAntiAlias = true
+                color = ContextCompat.getColor(applicationContext, R.color.digital_text_dim)
+            }
+
+
 //            mOnayRenderer = TextRenderer()
 //            mOnayRenderer.setAlignment(Layout.Alignment.ALIGN_CENTER)
 //            mOnayRenderer.setGravity(Gravity.CENTER)
@@ -328,6 +335,7 @@ class YurisWatchface : CanvasWatchFaceService() {
 
             if (mLowBitAmbient) {
                 mTextPaint.isAntiAlias = !inAmbientMode
+                mDimTextPaint.isAntiAlias = !inAmbientMode
 //                mTextKopilka.isAntiAlias = !inAmbientMode
 //                mTextOnay.isAntiAlias = !inAmbientMode
             }
@@ -382,13 +390,6 @@ class YurisWatchface : CanvasWatchFaceService() {
 
             val rightComplicationDrawable = mComplicationDrawableSparseArray.get(RIGHT_COMPLICATION_ID)
             rightComplicationDrawable.bounds = rightBounds
-
-            val screenForBackgroundBound =
-            // Left, Top, Right, Bottom
-                    Rect(0, 0, width, height)
-
-            val backgroundComplicationDrawable = mComplicationDrawableSparseArray.get(BACKGROUND_COMPLICATION_ID)
-            backgroundComplicationDrawable.bounds = screenForBackgroundBound
         }
 
         override fun onTapCommand(tapType: Int, x: Int, y: Int, eventTime: Long) {
@@ -433,12 +434,17 @@ class YurisWatchface : CanvasWatchFaceService() {
 //            val resp = sendGet()
 //            Log.d("SEND", "resp")
 
+            val paint = if (mAmbient)
+                mDimTextPaint
+            else
+                mTextPaint
+
             val text = if (mAmbient)
                 String.format("%d:%02d", mCalendar.get(Calendar.HOUR_OF_DAY), mCalendar.get(Calendar.MINUTE))
             else
                 String.format("%d:%02d:%02d", mCalendar.get(Calendar.HOUR_OF_DAY), mCalendar.get(Calendar.MINUTE),
                         mCalendar.get(Calendar.SECOND))
-            canvas.drawText(text, mXOffset, mYOffset, mTextPaint)
+            canvas.drawText(text, mXOffset, mYOffset, paint)
 //            mOnayRenderer.draw(canvas, Rect(0, mYOffsetLower.toInt(), canvas.width,
 //                    (mYOffsetLower + 20).toInt()))
         }
@@ -569,6 +575,7 @@ class YurisWatchface : CanvasWatchFaceService() {
 //            )
 
             mTextPaint.textSize = textSize
+            mDimTextPaint.textSize = textSize
 //            mTextOnay.textSize = subTextSize
 //            mTextKopilka.textSize = subTextSize
         }
