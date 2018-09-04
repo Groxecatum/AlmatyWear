@@ -15,4 +15,5 @@
     <dimen name="digital_x_offset_kopilka_round">85dp</dimen>
     <dimen name="digital_x_offset_onay">85dp</dimen>
     <dimen name="digital_x_offset_onay_round">95dp</dimen>
+    <dimen name="settings_preview_size">180dp</dimen>
 </resources>

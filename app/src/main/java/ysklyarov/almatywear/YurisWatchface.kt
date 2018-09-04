@@ -22,6 +22,7 @@ import android.util.SparseArray
 import android.view.Gravity
 import android.view.SurfaceHolder
 import android.view.WindowInsets
+import ysklyarov.almatywear.ComplicationConfigActivity
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.lang.ref.WeakReference
@@ -52,48 +53,39 @@ class YurisWatchface : CanvasWatchFaceService() {
 
         private const val MSG_UPDATE_TIME = 0
 
-        private val BACKGROUND_COMPLICATION_ID = 0
-
         private val LEFT_COMPLICATION_ID = 100
         private val RIGHT_COMPLICATION_ID = 101
+        private val MIDDLE_COMPLICATION_ID = 102
+        private val LARGE_COMPLICATION_ID = 103
 
-        private val COMPLICATION_IDS = intArrayOf(/*BACKGROUND_COMPLICATION_ID,*/ LEFT_COMPLICATION_ID, RIGHT_COMPLICATION_ID)
+        private val COMPLICATION_IDS = intArrayOf(LEFT_COMPLICATION_ID, RIGHT_COMPLICATION_ID)
 
         private val COMPLICATION_SUPPORTED_TYPES = arrayOf(
-                //intArrayOf(ComplicationData.TYPE_LARGE_IMAGE),
                 intArrayOf(ComplicationData.TYPE_RANGED_VALUE, ComplicationData.TYPE_ICON, ComplicationData.TYPE_SHORT_TEXT, ComplicationData.TYPE_SMALL_IMAGE),
                 intArrayOf(ComplicationData.TYPE_RANGED_VALUE, ComplicationData.TYPE_ICON, ComplicationData.TYPE_SHORT_TEXT, ComplicationData.TYPE_SMALL_IMAGE))
 
-        // Used by {@link AnalogComplicationConfigRecyclerViewAdapter} to check if complication location
-        // is supported in settings config activity.
-//        fun getComplicationId(
-//                complicationLocation: ConfigAdapter.ComplicationLocation): Int {
-//            // Add any other supported locations here.
-//            when (complicationLocation) {
-//                //ConfigAdapter.ComplicationLocation.BACKGROUND -> return BACKGROUND_COMPLICATION_ID
-//                ConfigAdapter.ComplicationLocation.LEFT -> return LEFT_COMPLICATION_ID
-//                ConfigAdapter.ComplicationLocation.RIGHT -> return RIGHT_COMPLICATION_ID
-//                else -> return -1
-//            }
-//        }
-//
-//        // Used by {@link AnalogComplicationConfigRecyclerViewAdapter} to retrieve all complication ids.
-//        fun getComplicationIds(): IntArray {
-//            return COMPLICATION_IDS
-//        }
-//
-//        // Used by {@link AnalogComplicationConfigRecyclerViewAdapter} to see which complication types
-//        // are supported in the settings config activity.
-//        fun getSupportedComplicationTypes(
-//                complicationLocation: ConfigAdapter.ComplicationLocation): IntArray {
-//            // Add any other supported locations here.
-//            when (complicationLocation) {
-//                //ConfigAdapter.ComplicationLocation.BACKGROUND -> return COMPLICATION_SUPPORTED_TYPES[0]
-//                ConfigAdapter.ComplicationLocation.LEFT -> return COMPLICATION_SUPPORTED_TYPES[1]
-//                ConfigAdapter.ComplicationLocation.RIGHT -> return COMPLICATION_SUPPORTED_TYPES[2]
-//                else -> return intArrayOf()
-//            }
-//        }
+        internal fun getComplicationId(
+                complicationLocation: ComplicationConfigActivity.ComplicationLocation): Int {
+            when (complicationLocation) {
+                ComplicationConfigActivity.ComplicationLocation.LEFT -> return LEFT_COMPLICATION_ID
+                ComplicationConfigActivity.ComplicationLocation.RIGHT -> return RIGHT_COMPLICATION_ID
+                else -> return -1
+            }
+        }
+
+        internal fun getComplicationIds(): IntArray {
+            return COMPLICATION_IDS
+        }
+
+        internal fun getSupportedComplicationTypes(
+                complicationLocation: ComplicationConfigActivity.ComplicationLocation): IntArray {
+
+            when (complicationLocation) {
+                ComplicationConfigActivity.ComplicationLocation.LEFT -> return COMPLICATION_SUPPORTED_TYPES[0]
+                ComplicationConfigActivity.ComplicationLocation.RIGHT -> return COMPLICATION_SUPPORTED_TYPES[1]
+                else -> return intArrayOf()
+            }
+        }
     }
 
     override fun onCreateEngine(): Engine {
@@ -177,68 +169,21 @@ class YurisWatchface : CanvasWatchFaceService() {
             }
         }
 
-        private fun loadSavedPreferences() {
-//            Log.d(TAG, "Loading preferences")
-//            val markerColorResourceName = applicationContext.getString(R.string.saved_marker_color)
-
-//            mWatchHandHighlightColor = mSharedPref.getInt(markerColorResourceName, Color.WHITE)
-
-//            if (mBackgroundColor == Color.WHITE) {
-//                mWatchHandAndComplicationsColor = Color.BLACK
-//                mWatchHandShadowColor = Color.WHITE
-//            } else {
-//                mWatchHandAndComplicationsColor = Color.WHITE
-//                mWatchHandShadowColor = Color.BLACK
-//            }
-//
-//            val unreadNotificationPreferenceResourceName = applicationContext.getString(R.string.saved_unread_notifications_pref)
-//
-//            mUnreadNotificationsPreference = mSharedPref.getBoolean(unreadNotificationPreferenceResourceName, true)
-        }
-
-        private fun setComplicationsActiveAndAmbientColors(primaryComplicationColor: Int) {
-//            Log.d(TAG, "Setting color for complications")
-            var complicationId: Int
-            var complicationDrawable: ComplicationDrawable
-
-            for (i in COMPLICATION_IDS.indices) {
-                complicationId = COMPLICATION_IDS[i]
-                complicationDrawable = mComplicationDrawableSparseArray.get(complicationId)
-
-                if (complicationId == BACKGROUND_COMPLICATION_ID) {
-                    // It helps for the background color to be black in case the image used for the
-                    // watch face's background takes some time to load.
-                    complicationDrawable.setBackgroundColorActive(Color.BLACK)
-                } else {
-                    // Active mode colors.
-                    complicationDrawable.setBorderColorActive(primaryComplicationColor)
-                    complicationDrawable.setRangedValuePrimaryColorActive(primaryComplicationColor)
-
-                    // Ambient mode colors.
-                    complicationDrawable.setBorderColorAmbient(Color.WHITE)
-                    complicationDrawable.setRangedValuePrimaryColorAmbient(Color.WHITE)
-                }
-            }
-        }
-
         private fun initializeComplicationsAndBackground() {
-            Log.d(TAG, "Initializing complications")
+            Log.d(TAG, "initializeComplications()")
 
             mActiveComplicationDataSparseArray = SparseArray(COMPLICATION_IDS.size)
 
-            val leftComplicationDrawable = ComplicationDrawable(applicationContext)
+            val leftComplicationDrawable = getDrawable(R.drawable.custom_complication_styles) as ComplicationDrawable
+            leftComplicationDrawable.setContext(applicationContext)
 
-            val rightComplicationDrawable = ComplicationDrawable(applicationContext)
-
-            //val backgroundComplicationDrawable = ComplicationDrawable(applicationContext)
+            val rightComplicationDrawable = getDrawable(R.drawable.custom_complication_styles) as ComplicationDrawable
+            rightComplicationDrawable.setContext(applicationContext)
 
             mComplicationDrawableSparseArray = SparseArray(COMPLICATION_IDS.size)
-
             mComplicationDrawableSparseArray.put(LEFT_COMPLICATION_ID, leftComplicationDrawable)
             mComplicationDrawableSparseArray.put(RIGHT_COMPLICATION_ID, rightComplicationDrawable)
-//            mComplicationDrawableSparseArray.put(BACKGROUND_COMPLICATION_ID, backgroundComplicationDrawable)
 
-            setComplicationsActiveAndAmbientColors(Color.WHITE)
             setActiveComplications(*COMPLICATION_IDS)
         }
 
@@ -279,6 +224,42 @@ class YurisWatchface : CanvasWatchFaceService() {
 //            }
         }
 
+        override fun onSurfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+            super.onSurfaceChanged(holder, format, width, height)
+
+
+            // For most Wear devices, width and height are the same, so we just chose one (width).
+            // TODO: Step 2, calculating ComplicationDrawable locations
+            val sizeOfComplication = width / 4
+            val midpointOfScreen = width / 2
+
+            val horizontalOffset = (midpointOfScreen - sizeOfComplication) / 2
+            val verticalOffset = midpointOfScreen + sizeOfComplication / 2
+
+            val leftBounds =
+            // Left, Top, Right, Bottom
+                    Rect(
+                            horizontalOffset,
+                            verticalOffset,
+                            horizontalOffset + sizeOfComplication,
+                            verticalOffset + sizeOfComplication)
+
+            val leftComplicationDrawable = mComplicationDrawableSparseArray.get(LEFT_COMPLICATION_ID)
+            leftComplicationDrawable.bounds = leftBounds
+
+            val rightBounds =
+            // Left, Top, Right, Bottom
+                    Rect(
+                            midpointOfScreen + horizontalOffset,
+                            verticalOffset,
+                            midpointOfScreen + horizontalOffset + sizeOfComplication,
+                            verticalOffset + sizeOfComplication)
+
+            val rightComplicationDrawable = mComplicationDrawableSparseArray.get(RIGHT_COMPLICATION_ID)
+            rightComplicationDrawable.bounds = rightBounds
+        }
+
+
         override fun onCreate(holder: SurfaceHolder) {
 //            Log.d(TAG, "Creating")
             super.onCreate(holder)
@@ -290,13 +271,6 @@ class YurisWatchface : CanvasWatchFaceService() {
 
             mCalendar = Calendar.getInstance()
 
-            // Used throughout watch face to pull user's preferences.
-//            val context = applicationContext
-//            mSharedPref = context.getSharedPreferences(
-//                    getString(R.string.digital_complication_preference_file_key),
-//                    Context.MODE_PRIVATE)
-
-            loadSavedPreferences()
             initializeComplicationsAndBackground()
             initializeWatchFace()
         }
@@ -340,56 +314,15 @@ class YurisWatchface : CanvasWatchFaceService() {
 //                mTextOnay.isAntiAlias = !inAmbientMode
             }
 
+            var complicationDrawable: ComplicationDrawable
+            for (i in 0 until COMPLICATION_IDS.size) {
+                complicationDrawable = mComplicationDrawableSparseArray.get(COMPLICATION_IDS[i])
+                complicationDrawable.setInAmbientMode(mAmbient)
+            }
+
             // Whether the timer should be running depends on whether we're visible (as well as
             // whether we're in ambient mode), so we may need to start or stop the timer.
             updateTimer()
-        }
-
-        override fun onSurfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-            super.onSurfaceChanged(holder, format, width, height)
-
-            Log.d(TAG, "Setting bounds")
-            /*
-             * Calculates location bounds for right and left circular complications. Please note,
-             * we are not demonstrating a long text complication in this watch face.
-             *
-             * We suggest using at least 1/4 of the screen width for circular (or squared)
-             * complications and 2/3 of the screen width for wide rectangular complications for
-             * better readability.
-             */
-
-            // For most Wear devices, width and height are the same, so we just chose one (width).
-            val sizeOfComplication = width / 4
-            val midpointOfScreen = width / 2
-
-            val horizontalOffset = (midpointOfScreen - sizeOfComplication) / 2
-            val verticalOffset = midpointOfScreen - sizeOfComplication / 2
-
-            val leftBounds =
-            // Left, Top, Right, Bottom
-                    Rect(
-                            horizontalOffset,
-                            verticalOffset,
-                            horizontalOffset + sizeOfComplication,
-                            verticalOffset + sizeOfComplication)
-
-            Log.d(TAG, "Setting left bounds $horizontalOffset $verticalOffset, $sizeOfComplication")
-
-            val leftComplicationDrawable = mComplicationDrawableSparseArray.get(LEFT_COMPLICATION_ID)
-            leftComplicationDrawable.bounds = leftBounds
-
-            val rightBounds =
-            // Left, Top, Right, Bottom
-                    Rect(
-                            midpointOfScreen + horizontalOffset,
-                            verticalOffset,
-                            midpointOfScreen + horizontalOffset + sizeOfComplication + 20,
-                            verticalOffset + sizeOfComplication + 20)
-
-            Log.d(TAG, "Setting right bounds from midpoint $midpointOfScreen - $horizontalOffset $verticalOffset, $sizeOfComplication")
-
-            val rightComplicationDrawable = mComplicationDrawableSparseArray.get(RIGHT_COMPLICATION_ID)
-            rightComplicationDrawable.bounds = rightBounds
         }
 
         override fun onTapCommand(tapType: Int, x: Int, y: Int, eventTime: Long) {
