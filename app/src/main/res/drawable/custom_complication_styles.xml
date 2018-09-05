@@ -41,5 +41,6 @@
         app:rangedValuePrimaryColor="@color/digital_text_dim"
         app:titleColor="@color/digital_text_dim"
         app:borderColor="@color/digital_text_dim"
+        app:textColor="@color/digital_text_dim"
         app:rangedValueSecondaryColor="@android:color/transparent"/>
 </drawable>

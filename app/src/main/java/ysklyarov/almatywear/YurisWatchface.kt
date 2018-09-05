@@ -11,18 +11,13 @@ import android.os.Message
 import android.support.v4.content.ContextCompat
 import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.rendering.ComplicationDrawable
-import android.support.wearable.complications.rendering.TextRenderer
 import android.support.wearable.watchface.CanvasWatchFaceService
 import android.support.wearable.watchface.WatchFaceService
 import android.support.wearable.watchface.WatchFaceStyle
-import android.text.Layout
-import android.text.TextPaint
 import android.util.Log
 import android.util.SparseArray
-import android.view.Gravity
 import android.view.SurfaceHolder
 import android.view.WindowInsets
-import ysklyarov.almatywear.ComplicationConfigActivity
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.lang.ref.WeakReference
@@ -48,7 +43,7 @@ class YurisWatchface : CanvasWatchFaceService() {
         private val COMPLICATION_IDS = intArrayOf(LARGE_COMPLICATION_ID, LEFT_COMPLICATION_ID, RIGHT_COMPLICATION_ID)
 
         private val COMPLICATION_SUPPORTED_TYPES = arrayOf(
-                intArrayOf(ComplicationData.TYPE_SHORT_TEXT, ComplicationData.TYPE_LONG_TEXT),
+                intArrayOf(ComplicationData.TYPE_LONG_TEXT),
                 intArrayOf(ComplicationData.TYPE_RANGED_VALUE, ComplicationData.TYPE_ICON, ComplicationData.TYPE_SHORT_TEXT, ComplicationData.TYPE_SMALL_IMAGE),
                 intArrayOf(ComplicationData.TYPE_RANGED_VALUE, ComplicationData.TYPE_ICON, ComplicationData.TYPE_SHORT_TEXT, ComplicationData.TYPE_SMALL_IMAGE))
 
@@ -222,11 +217,11 @@ class YurisWatchface : CanvasWatchFaceService() {
             super.onSurfaceChanged(holder, format, width, height)
 
             val sizeOfComplication = width / 4
-            val sizeOfLargeComplication = width / 2
-            val midpointOfScreen = width / 2
+            val midpointOfScreenW = width / 2
+            val midpointOfScreenH = height / 2
 
-            val horizontalOffset = (midpointOfScreen - sizeOfComplication) / 2
-            val verticalOffset = midpointOfScreen + sizeOfComplication / 2
+            val horizontalOffset = (midpointOfScreenW - sizeOfComplication) / 2
+            val verticalOffset = midpointOfScreenW + sizeOfComplication / 2
 
             val leftBounds =
                     Rect(
@@ -240,9 +235,9 @@ class YurisWatchface : CanvasWatchFaceService() {
 
             val rightBounds =
             Rect(
-                    midpointOfScreen + horizontalOffset,
+                    midpointOfScreenW + horizontalOffset,
                     verticalOffset,
-                    midpointOfScreen + sizeOfComplication + horizontalOffset,
+                    midpointOfScreenW + sizeOfComplication + horizontalOffset,
                     verticalOffset + sizeOfComplication)
 
             val rightComplicationDrawable = mComplicationDrawableSparseArray.get(RIGHT_COMPLICATION_ID)
@@ -250,10 +245,10 @@ class YurisWatchface : CanvasWatchFaceService() {
 
             val largeBounds =
                     Rect(
-                            midpointOfScreen - sizeOfLargeComplication  / 2,
-                            midpointOfScreen - verticalOffset - sizeOfComplication,
-                            midpointOfScreen + sizeOfLargeComplication / 2,
-                            midpointOfScreen - verticalOffset)
+                            horizontalOffset,
+                            midpointOfScreenH - sizeOfComplication,
+                            midpointOfScreenW + sizeOfComplication + horizontalOffset,
+                            midpointOfScreenH)
 
             val largeComplicationDrawable = mComplicationDrawableSparseArray.get(LARGE_COMPLICATION_ID)
             largeComplicationDrawable.bounds = largeBounds
@@ -397,8 +392,7 @@ class YurisWatchface : CanvasWatchFaceService() {
             }
         }
 
-        override fun onComplicationDataUpdate(
-                complicationId: Int, complicationData: ComplicationData?) {
+        override fun onComplicationDataUpdate(complicationId: Int, complicationData: ComplicationData?){
 //            Log.d(TAG, "onComplicationDataUpdate() id: $complicationId")
 
             // Adds/updates active complication data in the array.
