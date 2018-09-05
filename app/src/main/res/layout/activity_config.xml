@@ -16,7 +16,7 @@
   -->
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <View
@@ -33,7 +33,8 @@
             android:src="@drawable/added_complication"
             style="?android:borderlessButtonStyle"
             android:background="@android:color/transparent"
-            android:layout_alignStart="@+id/watch_face_background" android:layout_alignTop="@+id/left_complication"/>
+            android:layout_alignStart="@+id/watch_face_background"
+            android:layout_alignTop="@+id/left_complication"/>
 
     <ImageButton
             android:id="@+id/left_complication"
@@ -51,8 +52,8 @@
             android:src="@drawable/added_complication"
             style="?android:borderlessButtonStyle"
             android:background="@android:color/transparent"
-            android:layout_toEndOf="@+id/left_complication_background"
-            android:layout_alignTop="@+id/right_complication"/>
+            android:layout_alignTop="@+id/right_complication"
+            android:layout_alignEnd="@+id/watch_face_background"/>
 
     <ImageButton
             android:id="@+id/right_complication"
@@ -61,5 +62,24 @@
             style="?android:borderlessButtonStyle"
             android:background="@android:color/transparent"
             android:layout_alignEnd="@+id/watch_face_background"
-            android:layout_centerVertical="true"/>
+            android:contentDescription="Right complication" android:layout_below="@+id/Time"/>
+    <ImageView
+            android:id="@+id/large_complication_background"
+            android:src="@drawable/added_complication"
+            android:layout_width="178dp"
+            android:layout_height="48dp"
+            android:layout_alignTop="@+id/large_complication" android:layout_centerHorizontal="true"/>
+    <ImageButton
+            android:id="@+id/large_complication"
+            android:layout_width="179dp"
+            android:layout_height="wrap_content"
+            style="?android:borderlessButtonStyle"
+            android:background="@android:color/transparent"
+            android:layout_centerHorizontal="true" android:layout_above="@+id/Time"/>
+    <TextView
+            android:text="@string/time_template"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/digital_text_size"
+            android:id="@+id/Time" android:visibility="visible"
+            android:gravity="center" android:layout_centerInParent="true"/>
 </RelativeLayout>

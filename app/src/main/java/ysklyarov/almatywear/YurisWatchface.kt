@@ -30,18 +30,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
 
-/**
- * Digital watch face with seconds. In ambient mode, the seconds aren't displayed. On devices with
- * low-bit ambient mode, the text is drawn without anti-aliasing in ambient mode.
- *
- *
- * Important Note: Because watch face apps do not have a default Activity in
- * their project, you will need to set your Configurations to
- * "Do not launch Activity" for both the Wear and/or Application modules. If you
- * are unsure how to do this, please review the "Run Starter project" section
- * in the Google Watch Face Code Lab:
- * https://codelabs.developers.google.com/codelabs/watchface/index.html#0
- */
 class YurisWatchface : CanvasWatchFaceService() {
 
     companion object {
@@ -55,18 +43,19 @@ class YurisWatchface : CanvasWatchFaceService() {
 
         private val LEFT_COMPLICATION_ID = 100
         private val RIGHT_COMPLICATION_ID = 101
-        private val MIDDLE_COMPLICATION_ID = 102
         private val LARGE_COMPLICATION_ID = 103
 
-        private val COMPLICATION_IDS = intArrayOf(LEFT_COMPLICATION_ID, RIGHT_COMPLICATION_ID)
+        private val COMPLICATION_IDS = intArrayOf(LARGE_COMPLICATION_ID, LEFT_COMPLICATION_ID, RIGHT_COMPLICATION_ID)
 
         private val COMPLICATION_SUPPORTED_TYPES = arrayOf(
+                intArrayOf(ComplicationData.TYPE_SHORT_TEXT, ComplicationData.TYPE_LONG_TEXT),
                 intArrayOf(ComplicationData.TYPE_RANGED_VALUE, ComplicationData.TYPE_ICON, ComplicationData.TYPE_SHORT_TEXT, ComplicationData.TYPE_SMALL_IMAGE),
                 intArrayOf(ComplicationData.TYPE_RANGED_VALUE, ComplicationData.TYPE_ICON, ComplicationData.TYPE_SHORT_TEXT, ComplicationData.TYPE_SMALL_IMAGE))
 
         internal fun getComplicationId(
                 complicationLocation: ComplicationConfigActivity.ComplicationLocation): Int {
             when (complicationLocation) {
+                ComplicationConfigActivity.ComplicationLocation.LARGE -> return LARGE_COMPLICATION_ID
                 ComplicationConfigActivity.ComplicationLocation.LEFT -> return LEFT_COMPLICATION_ID
                 ComplicationConfigActivity.ComplicationLocation.RIGHT -> return RIGHT_COMPLICATION_ID
                 else -> return -1
@@ -81,8 +70,9 @@ class YurisWatchface : CanvasWatchFaceService() {
                 complicationLocation: ComplicationConfigActivity.ComplicationLocation): IntArray {
 
             when (complicationLocation) {
-                ComplicationConfigActivity.ComplicationLocation.LEFT -> return COMPLICATION_SUPPORTED_TYPES[0]
-                ComplicationConfigActivity.ComplicationLocation.RIGHT -> return COMPLICATION_SUPPORTED_TYPES[1]
+                ComplicationConfigActivity.ComplicationLocation.LARGE -> return COMPLICATION_SUPPORTED_TYPES[0]
+                ComplicationConfigActivity.ComplicationLocation.LEFT -> return COMPLICATION_SUPPORTED_TYPES[1]
+                ComplicationConfigActivity.ComplicationLocation.RIGHT -> return COMPLICATION_SUPPORTED_TYPES[2]
                 else -> return intArrayOf()
             }
         }
@@ -170,7 +160,7 @@ class YurisWatchface : CanvasWatchFaceService() {
         }
 
         private fun initializeComplicationsAndBackground() {
-            Log.d(TAG, "initializeComplications()")
+//            Log.d(TAG, "initializeComplications()")
 
             mActiveComplicationDataSparseArray = SparseArray(COMPLICATION_IDS.size)
 
@@ -180,9 +170,13 @@ class YurisWatchface : CanvasWatchFaceService() {
             val rightComplicationDrawable = getDrawable(R.drawable.custom_complication_styles) as ComplicationDrawable
             rightComplicationDrawable.setContext(applicationContext)
 
+            val largeComplicationDrawable = getDrawable(R.drawable.custom_complication_styles) as ComplicationDrawable
+            largeComplicationDrawable.setContext(applicationContext)
+
             mComplicationDrawableSparseArray = SparseArray(COMPLICATION_IDS.size)
             mComplicationDrawableSparseArray.put(LEFT_COMPLICATION_ID, leftComplicationDrawable)
             mComplicationDrawableSparseArray.put(RIGHT_COMPLICATION_ID, rightComplicationDrawable)
+            mComplicationDrawableSparseArray.put(LARGE_COMPLICATION_ID, largeComplicationDrawable)
 
             setActiveComplications(*COMPLICATION_IDS)
         }
@@ -227,17 +221,14 @@ class YurisWatchface : CanvasWatchFaceService() {
         override fun onSurfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
             super.onSurfaceChanged(holder, format, width, height)
 
-
-            // For most Wear devices, width and height are the same, so we just chose one (width).
-            // TODO: Step 2, calculating ComplicationDrawable locations
             val sizeOfComplication = width / 4
+            val sizeOfLargeComplication = width / 2
             val midpointOfScreen = width / 2
 
             val horizontalOffset = (midpointOfScreen - sizeOfComplication) / 2
             val verticalOffset = midpointOfScreen + sizeOfComplication / 2
 
             val leftBounds =
-            // Left, Top, Right, Bottom
                     Rect(
                             horizontalOffset,
                             verticalOffset,
@@ -248,15 +239,24 @@ class YurisWatchface : CanvasWatchFaceService() {
             leftComplicationDrawable.bounds = leftBounds
 
             val rightBounds =
-            // Left, Top, Right, Bottom
-                    Rect(
-                            midpointOfScreen + horizontalOffset,
-                            verticalOffset,
-                            midpointOfScreen + horizontalOffset + sizeOfComplication,
-                            verticalOffset + sizeOfComplication)
+            Rect(
+                    midpointOfScreen + horizontalOffset,
+                    verticalOffset,
+                    midpointOfScreen + sizeOfComplication + horizontalOffset,
+                    verticalOffset + sizeOfComplication)
 
             val rightComplicationDrawable = mComplicationDrawableSparseArray.get(RIGHT_COMPLICATION_ID)
             rightComplicationDrawable.bounds = rightBounds
+
+            val largeBounds =
+                    Rect(
+                            midpointOfScreen - sizeOfLargeComplication  / 2,
+                            midpointOfScreen - verticalOffset - sizeOfComplication,
+                            midpointOfScreen + sizeOfLargeComplication / 2,
+                            midpointOfScreen - verticalOffset)
+
+            val largeComplicationDrawable = mComplicationDrawableSparseArray.get(LARGE_COMPLICATION_ID)
+            largeComplicationDrawable.bounds = largeBounds
         }
 
 
@@ -399,7 +399,7 @@ class YurisWatchface : CanvasWatchFaceService() {
 
         override fun onComplicationDataUpdate(
                 complicationId: Int, complicationData: ComplicationData?) {
-            Log.d(TAG, "onComplicationDataUpdate() id: $complicationId")
+//            Log.d(TAG, "onComplicationDataUpdate() id: $complicationId")
 
             // Adds/updates active complication data in the array.
             mActiveComplicationDataSparseArray.put(complicationId, complicationData)
@@ -431,8 +431,6 @@ class YurisWatchface : CanvasWatchFaceService() {
                 unregisterReceiver()
             }
 
-            // Whether the timer should be running depends on whether we're visible (as well as
-            // whether we're in ambient mode), so we may need to start or stop the timer.
             updateTimer()
         }
 
@@ -513,10 +511,6 @@ class YurisWatchface : CanvasWatchFaceService() {
 //            mTextKopilka.textSize = subTextSize
         }
 
-        /**
-         * Starts the [.mUpdateTimeHandler] timer if it should be running and isn't currently
-         * or stops it if it shouldn't be running but currently is.
-         */
         private fun updateTimer() {
             mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME)
             if (shouldTimerBeRunning()) {
@@ -524,17 +518,10 @@ class YurisWatchface : CanvasWatchFaceService() {
             }
         }
 
-        /**
-         * Returns whether the [.mUpdateTimeHandler] timer should be running. The timer should
-         * only run when we're visible and in interactive mode.
-         */
         private fun shouldTimerBeRunning(): Boolean {
             return isVisible && !isInAmbientMode
         }
 
-        /**
-         * Handle updating the time periodically in interactive mode.
-         */
         fun handleUpdateTimeMessage() {
             invalidate()
             if (shouldTimerBeRunning()) {

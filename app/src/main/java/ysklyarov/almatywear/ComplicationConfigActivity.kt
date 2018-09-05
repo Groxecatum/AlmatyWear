@@ -25,6 +25,7 @@ class ComplicationConfigActivity : Activity(), View.OnClickListener {
 
     private var mLeftComplicationId: Int = 0
     private var mRightComplicationId: Int = 0
+    private var mLargeComplicationId: Int = 0
 
     // Selected complication id by user.
     private var mSelectedComplicationId: Int = 0
@@ -37,14 +38,17 @@ class ComplicationConfigActivity : Activity(), View.OnClickListener {
 
     private var mLeftComplicationBackground: ImageView? = null
     private var mRightComplicationBackground: ImageView? = null
+    private var mLargeComplicationBackground: ImageView? = null
 
     private var mLeftComplication: ImageButton? = null
     private var mRightComplication: ImageButton? = null
+    private var mLargeComplication: ImageButton? = null
 
     private var mDefaultAddComplicationDrawable: Drawable? = null
 
 
     enum class ComplicationLocation {
+        LARGE,
         LEFT,
         RIGHT
     }
@@ -61,6 +65,7 @@ class ComplicationConfigActivity : Activity(), View.OnClickListener {
 
         mLeftComplicationId = YurisWatchface.getComplicationId(ComplicationLocation.LEFT)
         mRightComplicationId = YurisWatchface.getComplicationId(ComplicationLocation.RIGHT)
+        mLargeComplicationId = YurisWatchface.getComplicationId(ComplicationLocation.LARGE)
 
         mWatchFaceComponentName = ComponentName(applicationContext, YurisWatchface::class.java)
 
@@ -82,8 +87,15 @@ class ComplicationConfigActivity : Activity(), View.OnClickListener {
         mRightComplication!!.setImageDrawable(mDefaultAddComplicationDrawable)
         mRightComplicationBackground!!.visibility = View.INVISIBLE
 
-        // TODO: Step 3, initialize 2
-        // Initialization of code to retrieve active complication data for the watch face.
+        // Sets up large complication preview.
+        mLargeComplicationBackground = findViewById<View>(R.id.large_complication_background) as ImageView
+        mLargeComplication = findViewById<View>(R.id.large_complication) as ImageButton
+        mLargeComplication!!.setOnClickListener(this)
+
+        // Sets default as "Add Complication" icon.
+        mLargeComplication!!.setImageDrawable(mDefaultAddComplicationDrawable)
+        mLargeComplicationBackground!!.visibility = View.INVISIBLE
+
         mProviderInfoRetriever = ProviderInfoRetriever(applicationContext, Executors.newCachedThreadPool())
         mProviderInfoRetriever!!.init()
 
@@ -92,13 +104,9 @@ class ComplicationConfigActivity : Activity(), View.OnClickListener {
 
     override fun onDestroy() {
         super.onDestroy()
-
-        // TODO: Step 3, release
-        // Required to release retriever for active complication data.
         mProviderInfoRetriever!!.release()
     }
 
-    // TODO: Step 3, retrieve complication data
     fun retrieveInitialComplicationsData() {
 
         val complicationIds = YurisWatchface.getComplicationIds()
@@ -120,18 +128,18 @@ class ComplicationConfigActivity : Activity(), View.OnClickListener {
 
     override fun onClick(view: View) {
         if (view == mLeftComplication) {
-            Log.d(TAG, "Left Complication click()")
+//            Log.d(TAG, "Left Complication click()")
             launchComplicationHelperActivity(ComplicationLocation.LEFT)
 
         } else if (view == mRightComplication) {
-            Log.d(TAG, "Right Complication click()")
+//            Log.d(TAG, "Right Complication click()")
             launchComplicationHelperActivity(ComplicationLocation.RIGHT)
+        } else if (view == mLargeComplication) {
+//            Log.d(TAG, "Large Complication click()")
+            launchComplicationHelperActivity(ComplicationLocation.LARGE)
         }
     }
 
-    // Verifies the watch face supports the complication location, then launches the helper
-    // class, so user can choose their complication data provider.
-    // TODO: Step 3, launch data selector
     private fun launchComplicationHelperActivity(complicationLocation: ComplicationLocation) {
 
         mSelectedComplicationId = YurisWatchface.getComplicationId(complicationLocation)
@@ -155,8 +163,7 @@ class ComplicationConfigActivity : Activity(), View.OnClickListener {
     }
 
     fun updateComplicationViews(watchFaceComplicationId: Int, complicationProviderInfo: ComplicationProviderInfo?) {
-        Log.d(TAG, "updateComplicationViews(): id: $watchFaceComplicationId")
-//        Log.d(TAG, "\tinfo: " + complicationProviderInfo!!)
+//        Log.d(TAG, "updateComplicationViews(): id: $watchFaceComplicationId")
 
         if (watchFaceComplicationId == mLeftComplicationId) {
             if (complicationProviderInfo != null) {
@@ -177,6 +184,15 @@ class ComplicationConfigActivity : Activity(), View.OnClickListener {
                 mRightComplication!!.setImageDrawable(mDefaultAddComplicationDrawable)
                 mRightComplicationBackground!!.visibility = View.INVISIBLE
             }
+        } else if (watchFaceComplicationId == mLargeComplicationId) {
+            if (complicationProviderInfo != null) {
+                mLargeComplication!!.setImageIcon(complicationProviderInfo.providerIcon)
+                mRightComplicationBackground!!.visibility = View.VISIBLE
+
+            } else {
+                mLargeComplication!!.setImageDrawable(mDefaultAddComplicationDrawable)
+                mRightComplicationBackground!!.visibility = View.INVISIBLE
+            }
         }
     }
 
@@ -186,7 +202,7 @@ class ComplicationConfigActivity : Activity(), View.OnClickListener {
 
             // Retrieves information for selected Complication provider.
             val complicationProviderInfo = data.getParcelableExtra<ComplicationProviderInfo>(ProviderChooserIntent.EXTRA_PROVIDER_INFO)
-            Log.d(TAG, "Provider: $complicationProviderInfo")
+//            Log.d(TAG, "Provider: $complicationProviderInfo")
 
             if (mSelectedComplicationId >= 0) {
                 updateComplicationViews(mSelectedComplicationId, complicationProviderInfo)

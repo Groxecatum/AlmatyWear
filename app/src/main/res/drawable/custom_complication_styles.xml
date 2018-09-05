@@ -27,7 +27,7 @@
     app:iconColor="@color/white"
     app:rangedValuePrimaryColor="@color/white"
     app:rangedValueRingWidth="1dp"
-    app:rangedValueSecondaryColor="@color/white"
+    app:rangedValueSecondaryColor="@color/black"
     app:textColor="@color/white"
     app:textSize="12sp"
     app:textTypeface="sans-serif-condensed"
